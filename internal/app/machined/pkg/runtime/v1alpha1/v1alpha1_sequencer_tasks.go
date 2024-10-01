@@ -11,6 +11,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/freddierice/go-losetup/v2"
 	"io"
 	"log"
 	"os"
@@ -1708,6 +1709,37 @@ func Install(runtime.Sequence, any) (runtime.TaskExecutionFunc, string) {
 
 			if err = crires.WaitForImageCache(ctx, r.State().V1Alpha2().Resources()); err != nil {
 				return fmt.Errorf("failed to wait for the image cache: %w", err)
+			}
+			if ramdisk := procfs.ProcCmdline().Get(constants.KernelParamRamdisk).First(); pointer.SafeDeref(ramdisk) != "" {
+				// Activate ramdisk mode by creating a ramdisk based on the kernel param string, i.e: talos.experimental.ramdisk=1G
+				size, err := humanize.ParseBytes(*ramdisk)
+				if err != nil {
+					return err
+				}
+				// This is in /run because /tmp is size limited at install to like 64mb or something
+				filename := "/run/talos.img"
+				file, err := os.Create(filename)
+				if err != nil {
+					fmt.Println("Error creating file:", err)
+					return err
+				}
+				if _, err := file.Seek(int64(size-1), 0); err != nil {
+					fmt.Println("Error seeking in file:", err)
+					return err
+				}
+				if _, err := file.Write([]byte{0}); err != nil {
+					fmt.Println("Error writing to file:", err)
+					return err
+				}
+				err = file.Close()
+				if err != nil {
+					return err
+				}
+				dev, err := losetup.Attach(filename, 0, false)
+				if err != nil {
+					return err
+				}
+				fmt.Printf("Attached %s to %s\n", filename, dev.Path())
 			}
 
 			var disk string
