@@ -81,9 +81,6 @@ func (*Sequencer) Initialize(r runtime.Runtime) []runtime.Phase {
 		)
 	default:
 		phases = phases.Append(
-			"systemRequirements",
-			EnforceKSPPRequirements,
-		).Append(
 			"earlyServices",
 			StartUdevd,
 			StartMachined,
