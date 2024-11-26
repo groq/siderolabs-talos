@@ -8,7 +8,6 @@ import (
 	"errors"
 	"fmt"
 	"log"
-	"os/exec"
 
 	"github.com/siderolabs/go-cmd/pkg/cmd"
 )
@@ -47,7 +46,7 @@ func XFS(partname string, setters ...Option) error {
 
 	// The ftype=1 naming option is required by overlayfs.
 	// The bigtime=1 metadata option enables timestamps beyond 2038.
-	args := []string{"-n", "ftype=1"}
+	args := []string{"-n", "ftype=1", "-m", "bigtime=0,inobtcount=0"}
 
 	if opts.Force {
 		args = append(args, "-f")
@@ -60,10 +59,8 @@ func XFS(partname string, setters ...Option) error {
 	args = append(args, partname)
 
 	log.Printf("mkfs.xfs %v", args)
-	out, err := exec.Command("mkfs.xfs -V").CombinedOutput()
-    log.Printf("mkfs.xfs: %s\n", out)
 
-	_, err = cmd.Run("mkfs.xfs", args...)
+	_, err := cmd.Run("mkfs.xfs", args...)
 
 	return err
 }

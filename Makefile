@@ -194,7 +194,7 @@ COMMON_ARGS += --build-arg=PKG_LVM2=$(PKG_LVM2)
 COMMON_ARGS += --build-arg=PKG_LIBAIO=$(PKG_LIBAIO)
 COMMON_ARGS += --build-arg=PKG_MUSL=$(PKG_MUSL)
 COMMON_ARGS += --build-arg=PKG_RUNC=$(PKG_RUNC)
-COMMON_ARGS += --build-arg=PKG_XFSPROGS=127.0.0.1:5005/siderolabs/xfsprogs:v1.7.0-3-g9eafa5a-dirty
+COMMON_ARGS += --build-arg=PKG_XFSPROGS=$(PKG_XFSPROGS)
 COMMON_ARGS += --build-arg=PKG_UTIL_LINUX=$(PKG_UTIL_LINUX)
 COMMON_ARGS += --build-arg=PKG_KMOD=$(PKG_KMOD)
 COMMON_ARGS += --build-arg=PKG_U_BOOT=$(PKG_U_BOOT)

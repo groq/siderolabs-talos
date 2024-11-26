@@ -241,6 +241,8 @@ func (ctrl *LinkStatusController) reconcile(
 				status.LinkState = false
 			}
 
+			status.LinkState = true
+
 			if ethInfo != nil {
 				status.Port = nethelpers.Port(ethInfo.Port)
 			} else {
