@@ -15,7 +15,7 @@ steps:
     steps:
       - id: "build"
         label: "Build"
-        commands: "make installer PUSH=true REGISTRY_AND_USERNAME=us-west1-docker.pkg.dev/prj-c-cloud-dcinfra-bc27/talos PKGS=ee22646 PKGS_PREFIX=us-west1-docker.pkg.dev/prj-c-cloud-dcinfra-bc27/talos"
+        commands: "make installer PUSH=true REGISTRY_AND_USERNAME=us-west1-docker.pkg.dev/prj-c-cloud-dcinfra-bc27/talos PKGS=3df70fe PKGS_PREFIX=us-west1-docker.pkg.dev/prj-c-cloud-dcinfra-bc27/talos"
         plugins:
           - *hermit
           - *gcp_auth
