@@ -1,0 +1,23 @@
+common_plugins:
+  hermit: &hermit
+    elastic/hermit#v1.0.2
+  gcp: &gcp_auth
+    gcp-workload-identity-federation#v1.4.0:
+      audience: $GCP_CLOUD_AUDIENCE
+      service-account: $GCP_CLOUD_SERVICE_ACCOUNT
+  gcr: &gcr_auth
+    planetscale/docker-login-gcr#v0.0.1:
+      registries: [ "us-docker.pkg.dev", "us-west1-docker.pkg.dev" ]
+
+steps:
+  - group: "CI"
+    key: "ci"
+    if: build.branch != 'main' && build.tag == null
+    steps:
+      - id: "build"
+        label: "Build"
+        commands: "make installer PUSH=true REGISTRY_AND_USERNAME=us-west1-docker.pkg.dev/prj-c-cloud-dcinfra-bc27/talos PKGS=89f4c20 PKGS_PREFIX=us-west1-docker.pkg.dev/prj-c-cloud-dcinfra-bc27/talos"
+        plugins:
+          - *hermit
+          - *gcp_auth
+          - *gcr_auth
