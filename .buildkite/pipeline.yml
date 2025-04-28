@@ -13,9 +13,27 @@ steps:
   - group: "CI"
     key: "ci"
     steps:
-      - id: "build"
-        label: "Build"
-        commands: "make installer PUSH=true"
+      - id: "build_imager"
+        label: "Build Imager & Installer Base"
+        commands: "make imager installer PUSH=true INSTALLER_ARCH=targetarch"
+        plugins:
+          - *hermit
+          - *gcp_auth
+          - *gcr_auth
+      - id: "build_installer"
+        label: "Build Installer"
+        depends_on: "build_imager"
+        env:
+          EXTENSION_ARGS: "--system-extension-image ${REGISTRY}/${USERNAME}/stargz-snapshotter:v0.16.3@sha256:99e4a73abf59959fed41f01c1bbd5d53588d8ded3d5b4b41b901cc26ff8be734"
+          IMAGER: "docker run --rm -t -v ./_out:/out -v /root/.docker/config.json:/root/.docker/config.json ${REGISTRY}/${USERNAME}/imager:$TAG"
+        commands:
+          - echo "Building kernel..."
+          - "$$IMAGER iso --output-kind kernel"
+          - echo "Building initramfs..."
+          - "$$IMAGER iso --output-kind initramfs $$EXTENSION_ARGS"
+          - echo "Building installer..."
+          - "$$IMAGER installer $$EXTENSION_ARGS"
+          - "docker load --input _out/installer-amd64.tar && docker push ${REGISTRY}/${USERNAME}/installer:$TAG"
         plugins:
           - *hermit
           - *gcp_auth
