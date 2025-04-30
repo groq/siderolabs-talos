@@ -12,9 +12,28 @@ common_plugins:
 steps:
   - group: "CI"
     key: "ci"
+    if: build.tag == null
     steps:
       - id: "build"
         label: "Build"
+        commands: "make installer"
+        plugins:
+          - *hermit
+          - *gcp_auth
+          - *gcr_auth
+  - group: "Release"
+    key: "ci"
+    if: build.tag != null
+    steps:
+      - id: "build"
+        label: "Build"
+        commands: "make installer"
+        plugins:
+          - *hermit
+          - *gcp_auth
+          - *gcr_auth
+      - id: "push"
+        label: "Push"
         commands: "make installer PUSH=true"
         plugins:
           - *hermit
