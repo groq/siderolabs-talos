@@ -25,7 +25,7 @@ steps:
         depends_on: "build_imager"
         env:
           EXTENSION_ARGS: > 
-            --system-extension-image ${REGISTRY}/${USERNAME}/stargz-snapshotter:v0.16.3@sha256:dba7dd18c3c9e1268b3562ec504fd63c355ff6e84178d603c37b51cd74e0beda
+            --system-extension-image ${REGISTRY}/${USERNAME}/stargz-snapshotter:v0.16.3@sha256:596d9d1b48cc1245331820736bb268122806475a5e1adbdc9c333249b84388c0
             --system-extension-image ${REGISTRY}/${USERNAME}/fuse3:3.16.2@sha256:4dc204f302ce3173e048fb3cf0448a14c87a1db9053ba22b6caf78ad925e68e9
           IMAGER: "docker run --rm -t -v ./_out:/out -v /root/.docker/config.json:/root/.docker/config.json ${REGISTRY}/${USERNAME}/imager:$TAG"
         commands:
