@@ -15,5 +15,5 @@ HERMIT_GITHUB_TOKEN="$(groqkite gh token)"
 export PLATFORM="linux/amd64"
 export IMAGE_REGISTRY=$IMAGE_ARTIFACT_REGISTRY_REPO
 export REGISTRY_AND_USERNAME="us-west1-docker.pkg.dev/prj-c-cloud-dcinfra-bc27/talos"
-export PKGS="1571250"
+export PKGS="f66490f"
 export PKGS_PREFIX="us-west1-docker.pkg.dev/prj-c-cloud-dcinfra-bc27/talos"
