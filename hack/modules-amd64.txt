@@ -176,6 +176,8 @@ kernel/drivers/watchdog/sp5100_tco.ko
 kernel/drivers/watchdog/watchdog.ko
 kernel/drivers/watchdog/wdat_wdt.ko
 kernel/drivers/watchdog/xen_wdt.ko
+kernel/fs/cachefiles/cachefiles.ko
+kernel/fs/erofs/erofs.ko
 kernel/lib/objagg.ko
 kernel/lib/parman.ko
 kernel/lib/raid6/raid6_pq.ko

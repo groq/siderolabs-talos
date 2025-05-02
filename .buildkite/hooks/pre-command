@@ -1,8 +1,10 @@
 #! /bin/bash
 set -euo pipefail
 
-export GCP_CLOUD_AUDIENCE;GCP_CLOUD_AUDIENCE="$(buildkite-agent secret get GCP_CLOUD_AUDIENCE)"
-export GCP_CLOUD_SERVICE_ACCOUNT;GCP_CLOUD_SERVICE_ACCOUNT="$(buildkite-agent secret get GCP_CLOUD_SERVICE_ACCOUNT)"
+export GCP_CLOUD_AUDIENCE
+GCP_CLOUD_AUDIENCE="$(buildkite-agent secret get GCP_CLOUD_AUDIENCE)"
+export GCP_CLOUD_SERVICE_ACCOUNT
+GCP_CLOUD_SERVICE_ACCOUNT="$(buildkite-agent secret get GCP_CLOUD_SERVICE_ACCOUNT)"
 
 # needed to pull groq's hermit-packages
 export HERMIT_GITHUB_TOKEN
@@ -19,5 +21,5 @@ export USERNAME="talos"
 export TAG=$(git describe --tag --always --dirty --match v[0-9]\*)
 
 # Latest build from https://github.com/groq/siderolabs-pkgs
-export PKGS="1571250"
+export PKGS="f66490f"
 export PKGS_PREFIX="$REGISTRY/$USERNAME"
