@@ -21,7 +21,7 @@ export USERNAME="talos"
 export TAG=$(git describe --tag --always --dirty --match v[0-9]\*)
 
 # Latest build from https://github.com/groq/siderolabs-pkgs
-export PKGS="f66490f"
+export PKGS="v1.9.5-groq2"
 export PKGS_PREFIX="$REGISTRY/$USERNAME"
 
 # Particular extension versions to include in the installer image (one per line)
