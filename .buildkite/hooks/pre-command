@@ -21,13 +21,14 @@ export USERNAME="talos"
 export TAG=$(git describe --tag --always --dirty --match v[0-9]\*)
 
 # Latest build from https://github.com/groq/siderolabs-pkgs
-export PKGS="f66490f"
+export PKGS="v1.9.5-loadable-iscsi-2"
 export PKGS_PREFIX="$REGISTRY/$USERNAME"
 
 # Particular extension versions to include in the installer image (one per line)
 # IMPORTANT: please specify @sha256 for each extension
 EXTENSIONS=(
-    ${REGISTRY}/${USERNAME}/iscsi-tools:v0.1.6@sha256:0626af03c510c684d7d9c5238e8bff84623f74df5278f254c901624f63b33307
+  ${REGISTRY}/${USERNAME}/iscsi-tools:v0.1.6@sha256:0626af03c510c684d7d9c5238e8bff84623f74df5278f254c901624f63b33307
+  ${REGISTRY}/${USERNAME}/nydus-snapshotter:v0.15.1@sha256:9f672b232c42f5805e4b52b29c3415917ed269b2fe672af39fc049959f27594c
 )
 
 EXTENSION_ARGS=""

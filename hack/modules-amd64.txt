@@ -144,6 +144,10 @@ kernel/drivers/scsi/aacraid/aacraid.ko
 kernel/drivers/scsi/fcoe/libfcoe.ko
 kernel/drivers/scsi/fnic/fnic.ko
 kernel/drivers/scsi/hpsa.ko
+kernel/drivers/scsi/iscsi_tcp.ko
+kernel/drivers/scsi/libiscsi.ko
+kernel/drivers/scsi/libiscsi_tcp.ko
+kernel/drivers/scsi/scsi_transport_iscsi.ko
 kernel/drivers/scsi/isci/isci.ko
 kernel/drivers/scsi/libfc/libfc.ko
 kernel/drivers/scsi/lpfc/lpfc.ko
