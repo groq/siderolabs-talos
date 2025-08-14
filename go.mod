@@ -79,7 +79,7 @@ require (
 	github.com/coreos/go-iptables v0.8.0
 	github.com/cosi-project/runtime v0.6.4
 	github.com/distribution/reference v0.6.0
-	github.com/docker/docker v27.3.1+incompatible
+	github.com/docker/docker v28.0.0+incompatible
 	github.com/docker/go-connections v0.5.0
 	github.com/dustin/go-humanize v1.0.1
 	github.com/ecks/uefi v0.0.0-20221116212947-caef65d070eb
