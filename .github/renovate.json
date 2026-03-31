@@ -6,6 +6,7 @@
         ":semanticCommitScopeDisabled",
         "schedule:earlyMondays"
     ],
+    "minimumReleaseAge": "1 day",
     "prHeader": "Update Request | Renovate Bot",
     "regexManagers": [
         {
