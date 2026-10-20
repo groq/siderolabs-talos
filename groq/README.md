@@ -46,14 +46,16 @@ image digests. A new release is a reviewed lock-file change, not `latest`.
 Only stable 1.13 patch versions are admitted initially; adding another minor
 requires an explicit compatibility review and code change.
 
-PRs run tooling tests, validate the lock, fetch the exact upstream source, and
-check patch application. They do not start container builds or acquire credentials.
+The repository's active Buildkite integration loads `.buildkite/pipeline.yml`.
+It uses mise-pinned Python 3.12.11 and runs `bash groq/check.sh`: tooling tests,
+lock validation, and a fresh exact-source/patch check. The GitHub Actions
+validation job uses the same script if Actions is enabled. These checks do not
+start container builds or acquire deployment credentials, and remain usable with
+the global switch off. No check is skipped just to satisfy the CI status.
 Existing dirty Talos checkouts are never modified. Patch conflicts stop the job.
 
 ```sh
-python3 -m unittest discover -s groq/tests -v
-python3 groq/release.py validate
-python3 groq/release.py prepare --workspace /tmp/talos-source-check
+bash groq/check.sh
 ```
 
 After merge, provision an **isolated, preferably ephemeral** Linux amd64 CI runner

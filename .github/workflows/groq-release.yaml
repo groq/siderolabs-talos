@@ -4,11 +4,13 @@ on:
   pull_request:
     paths:
       - groq/**
+      - .buildkite/pipeline.yml
       - .github/workflows/groq-release.yaml
   push:
     branches: [main]
     paths:
       - groq/**
+      - .buildkite/pipeline.yml
       - .github/workflows/groq-release.yaml
   workflow_dispatch:
     inputs:
@@ -32,12 +34,8 @@ jobs:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           persist-credentials: false
-      - name: Test release tooling and kill-switch failures
-        run: python3 -m unittest discover -s groq/tests -v
-      - name: Validate release lock and policy
-        run: python3 groq/release.py validate
-      - name: Verify upstream identity and exact patch application
-        run: python3 groq/release.py prepare --workspace "$RUNNER_TEMP/talos-source-check"
+      - name: Validate tooling, kill switch, and exact upstream patch application
+        run: bash groq/check.sh
 
   candidate:
     needs: validate
