@@ -106,10 +106,46 @@ still need successful CI execution and YKA1 qualification before use.
    A listening TSPD SSH port or a previous boot's successful init is insufficient.
 6. Release only this run's repair hold, then verify serving recovery before the
    next IEI. Restarted CI must resume from durable receipts, never start over.
-7. Qualify YKA1 first, MSP1 next with separate approval. All other sites are
-   denied unless explicitly admitted; **DMM1 is excluded** until its model/SLO
-   policy is implemented and approved. Infra/control-plane upgrades are separate
-   from IEI worker maintenance and require their own quorum/backup checks.
+7. Qualify YKA1 first. MSP1 requires separate approval and the Brake exclusions
+   below; a general MSP1 approval never authorizes touching Brake nodes. All
+   other sites are denied unless explicitly admitted; **DMM1 is excluded** until
+   its model/SLO policy is implemented and approved. Infra/control-plane upgrades
+   are separate from IEI worker maintenance and require their own quorum/backup
+   checks.
+
+### MSP1 Brake protection (required before any MSP1 rollout)
+
+**Nodes running or reserved for Brake are excluded from the general rollout.**
+They require a separate owner-reviewed maintenance procedure and explicit
+approval. Neither a site-wide approval nor enabling the global switch overrides
+this exclusion. This is a contract for the future rollout runner, not a claim
+that a production exclusion mechanism exists in this build-only PR.
+
+- Keep all MSP1 rollout actions blocked until a reviewed, authoritative Brake
+  node inventory and dependency scope are established. Record stable node
+  identities, not just rack names. The absence of a running pod or a label is
+  not proof that a node is safe; a stopped Brake workload remains protected.
+- Combine that protected inventory with fresh workload/allocation checks before
+  acquiring repair and before each disruptive operation. Missing, stale,
+  ambiguous, or conflicting evidence fails closed. Inventory or allocation
+  changes invalidate the approved plan and require reconciliation, not a retry
+  against stale node names.
+- Check the **entire IEI allocation and maintenance group**, not just the selected
+  rack or node. If any member is protected or cannot be classified safely, block
+  the whole group before acquiring repair. Do not upgrade the remaining nodes
+  of a mixed group or move/evict Brake merely to make that group eligible.
+- Exclusion covers repair/disruption, cordon/drain/eviction, reboot, OS or
+  firmware changes, and boot/provisioning configuration. Shared PXE defaults,
+  boot selectors, or infrastructure changes that could affect Brake, including
+  its next boot, require the separate Brake procedure too.
+- If a conflict is discovered after work starts, stop further mutations and
+  retain existing owned repair holds for operator reconciliation. Do not clear
+  repair, automatically roll back, or blindly repeat an in-flight operation.
+- Before enabling MSP1, add regression tests for protected nodes, mixed IEI
+  allocations, unknown/stale inventory, allocation changes, and shared boot
+  configuration impact. Verify that none can reach a mutation call. The Brake
+  procedure must separately define owner approval, maintenance scope, serving
+  health/SLO checks, recovery steps, and explicit stop conditions.
 
 No lab or upstream RAMdisk feature project is required. Keep the small patch
 for the remaining hardware lifetime; do not freeze security updates for it.
