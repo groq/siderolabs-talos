@@ -1,0 +1,11 @@
+# The repository's configured bootstrap uploads this exact path with groqkite.
+# Validation stays usable while automation is disabled. No candidate build,
+# publication, cluster access, or repair/upgrade operation runs in this pipeline.
+steps:
+  - label: ":python: Validate Groq Talos release tooling"
+    key: groq-release-validation
+    timeout_in_minutes: 15
+    env:
+      GROQ_SKIP_HERMIT_INSTALL: "true"
+      GROQ_SKIP_MISE_INSTALL: "true"
+    command: mise exec python@3.12.11 -- bash groq/check.sh

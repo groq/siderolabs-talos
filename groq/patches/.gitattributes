@@ -1,0 +1,2 @@
+# Preserve unified-diff context whitespace; validate the applied source instead.
+*.patch -whitespace
