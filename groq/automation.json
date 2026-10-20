@@ -1,0 +1,5 @@
+{
+  "schema_version": 1,
+  "enabled": false,
+  "reason": "Disabled until the build pipeline and YKA1 canary are reviewed."
+}

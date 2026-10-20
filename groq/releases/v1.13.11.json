@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "upstream_tag": "v1.13.11",
+  "upstream_commit": "638bd94939c7c5b3db80756d925b4878cb288470",
+  "candidate": "v1.13.11-groq-ramdisk.1",
+  "patch": "groq/patches/0001-ramdisk.patch",
+  "patch_sha256": "f14e945687997e71fae247502c2f5d98e26d68dd5e8fa3baec59a2703ffaff3b",
+  "patch_origin": "https://github.com/groq/siderolabs-talos/commit/abc5f842028a6a6214c4d6de3967bb9a506166fd",
+  "imager": "ghcr.io/siderolabs/imager:v1.13.11@sha256:231ad6ee210ff54061066d32023c46346672f316c28c8761ef47fcc4a3f5734b",
+  "installer_base": "ghcr.io/siderolabs/installer-base:v1.13.11@sha256:785b8e87fd93919de45973cffc01b38590fc14c0e86939234b90e2a8db85bd4b",
+  "extensions": [
+    "ghcr.io/siderolabs/amd-ucode:20260916@sha256:50904b899cd328ad3a84478bd83d0f88a3e0cb1be87a8ccd199717fc51391c8d",
+    "ghcr.io/siderolabs/iscsi-tools:v0.2.0@sha256:6a3e113e4bc7fb8398905b344d4af54599217c7fa6bc177aff38bd29f602752d"
+  ]
+}
