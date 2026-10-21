@@ -185,6 +185,32 @@ class PreflightTests(unittest.TestCase):
 
 
 class CandidateTests(unittest.TestCase):
+    def test_secret_name_is_buildkite_compatible(self):
+        self.assertRegex(runner.SECRET, r"^[A-Z][A-Z0-9_]*$")
+
+    def test_secret_lookup_uses_configured_name_and_accepts_response_case(self):
+        for key in ("GROQ_TALOS_GITHUB_READ_TOKEN", "groq_talos_github_read_token"):
+            result = Mock(returncode=0, stdout=json.dumps({key: "fixture-token"}))
+            with (
+                self.subTest(key=key),
+                patch.object(runner.subprocess, "run", return_value=result) as call,
+            ):
+                reader = runner.policy_reader()
+                self.assertEqual(reader.token, "fixture-token")
+                call.assert_called_once_with(
+                    [
+                        "buildkite-agent",
+                        "secret",
+                        "get",
+                        "--format=json",
+                        "GROQ_TALOS_GITHUB_READ_TOKEN",
+                    ],
+                    capture_output=True,
+                    text=True,
+                    timeout=30,
+                    check=False,
+                )
+
     def test_pending_isolation_review_blocks_before_secret_access(self):
         with (
             patch.dict(os.environ, context(), clear=True),
@@ -220,6 +246,10 @@ class CandidateTests(unittest.TestCase):
             Mock(returncode=1, stdout="private", stderr="private"),
             Mock(returncode=0, stdout="private"),
             Mock(returncode=0, stdout=json.dumps({"wrong": "private"})),
+            Mock(
+                returncode=0,
+                stdout=json.dumps({"groq-talos-github-read-token": "private"}),
+            ),
             Mock(returncode=0, stdout=json.dumps({runner.SECRET: ""})),
         ):
             with (

@@ -16,7 +16,7 @@ import release
 from automation_gate import Gate, GitHubPolicyReader, Halted, decode_json
 
 ROOT = Path(__file__).resolve().parents[1]
-SECRET = "groq-talos-github-read-token"
+SECRET = "GROQ_TALOS_GITHUB_READ_TOKEN"
 DOCKER_HOST = "unix:///var/run/docker.sock"
 BUILDKIT_IMAGE = (
     "moby/buildkit:v0.34.1@sha256:"
@@ -233,7 +233,7 @@ def policy_reader():
         if not isinstance(data, dict) or len(data) != 1:
             raise ValueError("unexpected secret response")
         key, token = next(iter(data.items()))
-        if key.lower() != SECRET or not isinstance(token, str) or not token.strip():
+        if key.upper() != SECRET or not isinstance(token, str) or not token.strip():
             raise ValueError("invalid credential")
     except (ValueError, AttributeError):
         raise Halted("invalid policy credential response") from None

@@ -55,7 +55,10 @@ safe to run while automation is off. A fresh main build without
    untrusted PR jobs cannot obtain candidate secrets. Require normal protected
    main-branch review. Buildkite environment checks are interlocks, not a security
    boundary against someone allowed to replace the pipeline or run arbitrary code.
-3. Provision `groq-talos-github-read-token` in this Buildkite cluster's Secrets.
+3. Provision `GROQ_TALOS_GITHUB_READ_TOKEN` in this Buildkite cluster's Secrets.
+   Use underscores, not hyphens: Buildkite secret names permit letters, numbers,
+   and underscores. The runner requests this fixed name; do not export the
+   credential as a job environment variable.
    Use an approved CI identity, scoped **only** to `groq/siderolabs-talos`, with
    repository **Contents: read** (plus implicit Metadata: read). It needs to read
    commits and `groq/automation.json`; it must not have repository-write,
