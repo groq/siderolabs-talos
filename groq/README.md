@@ -70,6 +70,9 @@ Docker resources and known credential indicators. It stays usable with the
 global switch off. **Passing preflight is not proof of IAM/network isolation or
 privileged BuildKit support.** Candidate execution repeats it on its own worker.
 The first actual build must still qualify image assembly and hardware behavior.
+The injected Namespace runtime identity is reported separately; the additional
+`groq/buildkite-isolation.json` review receipt ships **unapproved**, preventing
+candidate execution until the CI owner reviews credential/IAM scope.
 
 Before enabling, follow [Buildkite setup and operator procedure](BUILDKITE.md)
 to review isolation and provision the restricted read-only GitHub credential.

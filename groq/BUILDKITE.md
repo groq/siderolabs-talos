@@ -27,6 +27,14 @@ socket, Docker host architecture/CPU/memory, Buildx availability, at least
 credential environment variables and files. It prints names, never secret values.
 Unexpected credentials or additional image hooks stop the job.
 
+The first live clean-image preflight found `NSC_TOKEN_FILE`, which Namespace uses
+as a token-file location for its runtime identity. Its value/content was not read.
+Preflight reports that platform identity separately rather than calling the worker
+credential-free. Its effective scope is **not yet reviewed**. Candidate execution
+is additionally blocked by `groq/buildkite-isolation.json` (`approved: false`),
+even if someone enables the global switch. This is a one-time reviewed readiness
+receipt, not a substitute for the global kill switch.
+
 It does not start a builder/container, fetch the policy secret, build an image,
 probe production endpoints, audit all IAM/network access, measure daemon-storage
 free space, or prove `security.insecure` works. A fresh candidate repeats these
@@ -59,6 +67,9 @@ safe to run while automation is off. A fresh main build without
    metadata identity, and that the job receives no deployment secrets/plugins.
    Review inherited agent hooks and Buildkite secret access, not just environment
    variables. Preflight's denylist cannot certify this on its own.
+   Include the injected Namespace runtime identity and shared cache/registry
+   scope in this review. Record the review URL and `approved: true` in
+   `groq/buildkite-isolation.json` by reviewed PR only after these checks pass.
 5. Review source/lock/patch identity and the first-build resource/time budget.
    Eight CPUs and 32 GiB RAM are a starting allocation, not a measured guarantee.
    Resolve blockers before merging a separate PR enabling the global switch.

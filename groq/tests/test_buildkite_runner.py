@@ -63,6 +63,20 @@ def artifacts(path):
 
 
 class PreflightTests(unittest.TestCase):
+    def test_platform_identity_is_not_a_blanket_token_exception(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            findings = runner.credential_findings(
+                {
+                    "NSC_TOKEN_FILE": "/not/read",
+                    "NSC_TOKEN": "private",
+                    "BUILDKITE_TOKEN": "private",
+                },
+                Path(tmp),
+            )
+        self.assertNotIn("environment:NSC_TOKEN_FILE", findings)
+        self.assertIn("environment:NSC_TOKEN", findings)
+        self.assertIn("environment:BUILDKITE_TOKEN", findings)
+
     def test_sensitive_environment_fails_without_exposing_values(self):
         with tempfile.TemporaryDirectory() as tmp:
             for key in (
@@ -171,6 +185,17 @@ class PreflightTests(unittest.TestCase):
 
 
 class CandidateTests(unittest.TestCase):
+    def test_pending_isolation_review_blocks_before_secret_access(self):
+        with (
+            patch.dict(os.environ, context(), clear=True),
+            patch.object(runner, "preflight"),
+            patch.object(runner, "isolation_review", return_value={"approved": False}),
+            patch.object(runner, "policy_reader") as credential,
+            self.assertRaisesRegex(Halted, "isolation review"),
+        ):
+            runner.candidate()
+        credential.assert_not_called()
+
     def test_only_fresh_approved_manual_main_context_is_allowed(self):
         runner.validate_candidate_context(context())
         for key, value in (
@@ -231,6 +256,7 @@ class CandidateTests(unittest.TestCase):
         with (
             patch.dict(os.environ, context(), clear=True),
             patch.object(runner, "preflight"),
+            patch.object(runner, "require_isolation_review"),
             patch.object(runner, "policy_reader", return_value=reader),
             patch.object(Gate, "run_build_command") as command,
             patch.object(release, "build") as build,
@@ -253,6 +279,7 @@ class CandidateTests(unittest.TestCase):
         with (
             patch.dict(os.environ, context(), clear=True),
             patch.object(runner, "preflight"),
+            patch.object(runner, "require_isolation_review"),
             patch.object(runner, "policy_reader", return_value=reader),
             patch.object(runner, "capture", return_value=SHA),
             patch.object(Gate, "run_build_command"),
@@ -277,6 +304,59 @@ class CandidateTests(unittest.TestCase):
         self.assertNotIn(
             "BUILDKITE_AGENT_ACCESS_TOKEN", cleanup.call_args.kwargs["env"]
         )
+        upload.assert_not_called()
+
+    def test_success_cleans_builder_before_guarded_publication(self):
+        reader = Mock(return_value=Snapshot(REVISION, True, "approved"))
+        reader.request.return_value = {"sha": SHA}
+        events = []
+
+        def built(lock, workspace, gate):
+            events.append("build")
+            self.assertEqual(gate.revision, REVISION)
+            self.assertNotIn("BUILDKITE_AGENT_ACCESS_TOKEN", gate.command_env)
+            artifacts(workspace / "artifacts")
+
+        def cleaned(*args, **kwargs):
+            events.append("cleanup")
+            return Mock(returncode=0)
+
+        def command(gate, cmd, **kwargs):
+            gate.check()
+            if cmd[:3] == ["buildkite-agent", "artifact", "upload"]:
+                events.append("upload")
+                self.assertEqual(gate.revision, REVISION)
+            gate.check()
+
+        with (
+            patch.dict(os.environ, context(), clear=True),
+            patch.object(runner, "preflight"),
+            patch.object(runner, "require_isolation_review"),
+            patch.object(runner, "policy_reader", return_value=reader),
+            patch.object(runner, "capture", return_value=SHA),
+            patch.object(Gate, "run_build_command", command),
+            patch.object(release, "build", side_effect=built),
+            patch.object(runner.subprocess, "run", side_effect=cleaned),
+        ):
+            runner.candidate()
+        self.assertEqual(events, ["build", "cleanup", "upload"])
+
+    def test_cleanup_failure_blocks_publication_after_successful_build(self):
+        reader = Mock(return_value=Snapshot(REVISION, True, "approved"))
+        reader.request.return_value = {"sha": SHA}
+        with (
+            patch.dict(os.environ, context(), clear=True),
+            patch.object(runner, "preflight"),
+            patch.object(runner, "require_isolation_review"),
+            patch.object(runner, "policy_reader", return_value=reader),
+            patch.object(runner, "capture", return_value=SHA),
+            patch.object(Gate, "run_build_command"),
+            patch.object(release, "build"),
+            patch.object(runner.subprocess, "run", return_value=Mock(returncode=1)),
+            patch.object(runner, "upload_candidate") as upload,
+            self.assertRaisesRegex(Halted, "cleanup failed"),
+        ):
+            runner.candidate()
         upload.assert_not_called()
 
 

@@ -13,7 +13,7 @@ import tempfile
 from pathlib import Path
 
 import release
-from automation_gate import Gate, GitHubPolicyReader, Halted
+from automation_gate import Gate, GitHubPolicyReader, Halted, decode_json
 
 ROOT = Path(__file__).resolve().parents[1]
 SECRET = "groq-talos-github-read-token"
@@ -38,6 +38,9 @@ FORBIDDEN_PREFIXES = (
     "BUILDKITE_S3_",
     "BUILDKITE_GS_",
     "BUILDKITE_ARTIFACT_UPLOAD_DESTINATION",
+    "BUILDKITE_TOKEN",
+    "BUILDKITE_API_TOKEN",
+    "BUILDKITE_GITHUB_TOKEN",
 )
 SENSITIVE = re.compile(r"TOKEN|PASSWORD|SECRET|CREDENTIAL|PRIVATE_KEY|ACCESS_KEY")
 CREDENTIAL_FILES = (
@@ -56,6 +59,11 @@ def credential_findings(env, home):
     findings = []
     for key, value in env.items():
         if not value:
+            continue
+        # Namespace injects this into the hosted job, even with a clean image.
+        # Inventory it separately; candidate execution still requires a reviewed
+        # isolation receipt. Never read the file or pass it to build commands.
+        if key == "NSC_TOKEN_FILE":
             continue
         if key.startswith(FORBIDDEN_PREFIXES) or (
             SENSITIVE.search(key) and not key.startswith("BUILDKITE_")
@@ -149,12 +157,40 @@ def preflight():
         "docker_server_version": info.get("ServerVersion"),
         "buildx": buildx,
         "credential_indicators_found": False,
+        "platform_identity_indicators": ["NSC_TOKEN_FILE"]
+        if os.environ.get("NSC_TOKEN_FILE")
+        else [],
+        "candidate_isolation_review_approved": isolation_review()["approved"],
         "privileged_buildkit_smoke_tested": False,
         "production_access_audited": False,
         "note": "No image build or privileged container started; IAM/network review remains mandatory.",
     }
     print(json.dumps(report, indent=2), flush=True)
     return report
+
+
+def isolation_review():
+    review = decode_json((ROOT / "groq/buildkite-isolation.json").read_bytes())
+    if (
+        not isinstance(review, dict)
+        or set(review) != {"schema_version", "approved", "review_reference"}
+        or type(review["schema_version"]) is not int
+        or review["schema_version"] != 1
+        or type(review["approved"]) is not bool
+        or not isinstance(review["review_reference"], str)
+        or (
+            review["approved"] and not review["review_reference"].startswith("https://")
+        )
+    ):
+        raise Halted("invalid Buildkite isolation review receipt")
+    return review
+
+
+def require_isolation_review():
+    review = isolation_review()
+    if not review["approved"]:
+        raise Halted("hosted runner credential/IAM isolation review is not approved")
+    return review
 
 
 def validate_candidate_context(env):
@@ -268,6 +304,7 @@ def upload_candidate(output, gate):
 def candidate():
     validate_candidate_context(os.environ)
     preflight()  # Recheck on THIS worker; the preceding job ran on another VM.
+    require_isolation_review()  # Cannot bypass pending review by enabling builds.
     reader = policy_reader()
     gate = Gate(reader)
     gate.check()  # Stop before privileged setup if the global switch is off.
