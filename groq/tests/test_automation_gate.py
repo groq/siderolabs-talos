@@ -153,6 +153,16 @@ class GateTests(unittest.TestCase):
             Gate(reader).run_build_command(["make", "kernel"])
         self.assertEqual(reader.call_count, 2)
 
+    def test_explicit_child_environment_is_used_instead_of_inheriting_secrets(self):
+        process = Mock()
+        process.wait.return_value = 0
+        clean = {"PATH": "/usr/bin"}
+        with patch("automation_gate.subprocess.Popen", return_value=process) as popen:
+            Gate(Mock(return_value=enabled()), command_env=clean).run_build_command(
+                ["make", "kernel"]
+            )
+        self.assertEqual(popen.call_args.kwargs["env"], clean)
+
     def test_kill_during_wait_stops_build_client_and_latches(self):
         reader = Mock(side_effect=[enabled(), Snapshot(NEXT_REVISION, False, "kill")])
         process = Mock(pid=999)

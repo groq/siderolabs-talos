@@ -58,16 +58,29 @@ Existing dirty Talos checkouts are never modified. Patch conflicts stop the job.
 bash groq/check.sh
 ```
 
-After merge, provision an **isolated, preferably ephemeral** Linux amd64 CI runner
-with the `groq-talos-builder` label, Docker/BuildKit, git, make, Python 3.11+, at
-least 40 GiB free disk, and outbound access to GitHub/GHCR. Measure build RAM/CPU
-requirements during the first build before setting permanent runner sizing.
-The unit-test target needs BuildKit's `security.insecure` entitlement; never run
-this on a production node or a shared runner with production credentials. No
-Kubernetes/Talos endpoint access, registry write credential, or new lab is needed.
+Candidate execution uses the **existing Buildkite `github` cluster's `large`
+queue** (Linux amd64, 8 vCPU / 32 GiB), not a new GitHub Actions runner. GitHub
+Actions is validation-only. The preflight and candidate steps override the
+shared agent image with a digest-pinned public Python/Debian image; they do not
+inherit the shared image's embedded Groq credential-broker hook or change any
+queue configuration. Buildkite supplies its agent and Docker tools.
 
-Enable the switch by reviewed PR, then manually dispatch `groq talos release`
-on `main` with `build_candidate=true`. The builder:
+PR and main builds run a non-building preflight for tooling, workspace disk,
+Docker resources and known credential indicators. It stays usable with the
+global switch off. **Passing preflight is not proof of IAM/network isolation or
+privileged BuildKit support.** Candidate execution repeats it on its own worker.
+The first actual build must still qualify image assembly and hardware behavior.
+The injected Namespace runtime identity is reported separately; the additional
+`groq/buildkite-isolation.json` review receipt ships **unapproved**, preventing
+candidate execution until the CI owner reviews credential/IAM scope.
+
+Before enabling, follow [Buildkite setup and operator procedure](BUILDKITE.md)
+to review isolation and provision the restricted read-only GitHub credential.
+Do not copy a personal/admin token or grant production/registry-write access.
+Then enable the switch by reviewed PR, create a fresh UI build on `main` with
+`GROQ_TALOS_BUILD=candidate`, and explicitly unblock the candidate approval step.
+An ordinary merge, PR, schedule, API build, tag, or retry cannot start a candidate.
+The builder:
 
 1. Re-checks the live switch and verifies the source/patch identity.
 2. Runs relevant upstream machined tests and builds the patched initramfs and
@@ -78,15 +91,18 @@ on `main` with `build_candidate=true`. The builder:
 4. Requires both variants to have the same kernel hash and all outputs to exist.
 5. Creates SHA256 checksums and a manifest marked `built-unqualified`, with
    `production_approved=false`, source/patch identity, and policy revision.
-6. Rechecks that original policy revision before uploading a uniquely named
-   Actions artifact. No GitHub Release, registry push, or deployment is performed.
+6. Removes only its job-owned local BuildKit instance, verifies artifact checksums
+   and the original policy receipt, then uploads only the enumerated candidate
+   files to that Buildkite job. No automatic `artifact_paths`, GitHub Release,
+   registry push, or deployment is performed.
 
 The upstream Makefile supplies its versioned package/tool dependencies. The
 initial pipeline does **not** promise bit-for-bit reproducibility of those
 transitive inputs; complete dependency digest locking/provenance is follow-up
 work before treating builds as reproducible production releases.
 
-Actions artifacts expire after 30 days. **Do not point PXE at them.** Permanent,
+Buildkite artifacts are CI outputs subject to organization retention policy, not
+durable release storage. **Do not point PXE at them.** Permanent,
 verified publishing to an immutable internal location and provisioning changes
 are a separate reviewed stage. No configuration or boot selector is changed by
 this workflow. Image assembly, hardware boot behavior, and upgrade/recovery paths
