@@ -65,12 +65,14 @@ class GitHubPolicyReader:
     environment variable can override the policy source.
     """
 
-    def __init__(self, request=None):
+    def __init__(self, request=None, *, token=None):
         self.request = request or self._request
+        self.token = token
 
-    @staticmethod
-    def _request(path):
-        token = os.environ.get("GH_TOKEN") or os.environ.get("GITHUB_TOKEN")
+    def _request(self, path):
+        token = (
+            self.token or os.environ.get("GH_TOKEN") or os.environ.get("GITHUB_TOKEN")
+        )
         if not token:
             raise Halted("missing read-only GitHub credential for live kill switch")
         request = urllib.request.Request(
@@ -109,10 +111,11 @@ class GitHubPolicyReader:
 
 
 class Gate:
-    def __init__(self, reader=None, expected_revision=None):
+    def __init__(self, reader=None, expected_revision=None, *, command_env=None):
         self.reader = reader or GitHubPolicyReader()
         self.revision = expected_revision
         self.halted = False
+        self.command_env = command_env
 
     def check(self):
         if self.halted:
@@ -143,7 +146,9 @@ class Gate:
         """
         self.check()
         print("+", " ".join(map(str, command)), flush=True)
-        process = subprocess.Popen(command, cwd=cwd, start_new_session=True)
+        process = subprocess.Popen(
+            command, cwd=cwd, start_new_session=True, env=self.command_env
+        )
         try:
             while True:
                 try:
