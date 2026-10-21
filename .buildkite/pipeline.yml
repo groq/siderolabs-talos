@@ -1,0 +1,3 @@
+steps:
+  - label: ":white_check_mark: no-op"
+    command: "true"
